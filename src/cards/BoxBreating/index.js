@@ -1,7 +1,7 @@
 import vertexShader from "./vertex.glsl";
 import fragmentShader from "./fragment.glsl";
 
-export default class BoxBreatingCard {
+export default class SpiralFlowCard {
   constructor(renderer, uniformManager) {
     this.renderer = renderer;
     this.gl = renderer.gl;
