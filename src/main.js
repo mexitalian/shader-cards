@@ -99,6 +99,9 @@ function stopApp() {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
   }
+  if (activeCard && typeof activeCard.destroy === "function") {
+    activeCard.destroy();
+  }
   activeCard = null;
   renderer.clear();
 }

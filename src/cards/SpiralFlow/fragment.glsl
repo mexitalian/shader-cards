@@ -6,9 +6,9 @@ uniform vec2  u_mouse;          // normalized 0..1 (from your app)
 uniform vec2  u_tilt;           // normalized -1..1
 
 // 0.0 = outward, 1.0 = inward
-float u_inward = 0.0;
+uniform float u_inward;
 // +1.0 = original direction, -1.0 = reverse rotation
-float u_direction = 1.0;
+uniform float u_direction;
 
 const float MATH_PI = 3.14159265359;
 
@@ -46,44 +46,53 @@ void main() {
     for (float iCircle = 1.0; iCircle < 16.0 * 4.0 - 1.0; iCircle += 1.0) {
         float circleN = iCircle / (16.0 * 4.0 - 1.0);
 
-        // Time progression with direction
-        float t = fract(circleN + u_time * 0.2 * u_direction);
+    // One full cycle is 12 seconds: [0..4) -> 0.0, [4..12) -> 1.0
+    float cycleLen = 12.0;
+    float cyclePos = mod(u_time, cycleLen);
 
-        // Inverted time for inward motion
-        float tInv = 1.0 - t;
+    // inwardState: 0.0 for first 4s, 1.0 for next 8s
+    float inwardState = (cyclePos < 4.0) ? 0.0 : 1.0;
 
-        // Blend between outward (t) and inward (tInv)
-        float tFlow = mix(t, tInv, u_inward);
+    // continuous phase, independent of mode
+    float basePhase = circleN + u_time * 0.2;
 
-        // Offset, driven by tFlow
-        float offset = -180.0 - 330.0 * tFlow;
+    // direction sign (still from your uniform)
+    float dirSign = (u_direction >= 0.0) ? 1.0 : -1.0;
+    float phaseDir = basePhase * dirSign;
 
-        // Angle with direction (rotation direction)
-        float angle = fract(
-            iCircle / 16.0 +
-            u_time * 0.01 * u_direction +
-            circleN / 8.0
-        );
+    // base 0..1 phase
+    float t = fract(phaseDir);
 
-        // Radius controlled by tFlow for apparent in/out flow
-        float radius = mix(
-            50.0,
-            0.0,
-            1.0 - saturate(1.2 * (1.0 - abs(2.0 * tFlow - 1.0)))
-        );
+    // inward/outward remap using inwardState
+    float tFlow = mix(t, 1.0 - t, inwardState);
 
-        vec2 p2 = p;
-        Rotate(p2, -angle * 2.0 * MATH_PI);
-        p2 += vec2(-offset, 0.0);
+    // offset and radius driven by tFlow
+    float offset = -180.0 - 330.0 * tFlow;
 
-        float dist = length(p2) - radius;
-        if (dist < sdf) {
-            // guard radius to avoid division by zero
-            float safeRadius = max(radius, 1e-3);
-            dirX = p2.x / safeRadius;
-            sdf  = dist;
-        }
+    float angle = fract(
+        iCircle / 16.0 +
+        u_time * 0.01 * dirSign +
+        circleN / 8.0
+    );
+
+    float radius = mix(
+        50.0,
+        0.0,
+        1.0 - saturate(1.2 * (1.0 - abs(2.0 * tFlow - 1.0)))
+    );
+
+    vec2 p2 = p;
+    Rotate(p2, -angle * 2.0 * MATH_PI);
+    p2 += vec2(-offset, 0.0);
+
+    float dist = length(p2) - radius;
+    if (dist < sdf) {
+        // guard radius to avoid division by zero
+        float safeRadius = max(radius, 1e-3);
+        dirX = p2.x / safeRadius;
+        sdf  = dist;
     }
+}
 
     // Base colors
     vec3 colorA = vec3(24.0, 30.0, 28.0);
