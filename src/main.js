@@ -2,6 +2,7 @@ import Renderer from "./engine/Renderer.js";
 import UniformManager from "./engine/UniformManager.js";
 import HelloWorldCard from "./cards/HelloWorld/index.js";
 import AccelerometerCard from "./cards/AccelerometerCard/index.js";
+import SpiralFlowCard from "./cards/SpiralFlow/index.js";
 import "./style.css";
 
 const canvas = document.querySelector("#canvas");
@@ -25,6 +26,13 @@ const CARDS = [
     description: "Reactive ripples based on device tilt.",
     Class: AccelerometerCard,
     needsSensor: true,
+  },
+  {
+    id: "spiral",
+    title: "Spiral",
+    description: "Spiralling circle flow.",
+    Class: SpiralFlowCard,
+    needsSensor: false,
   },
 ];
 
